@@ -35,43 +35,24 @@ public class AlfrescoService {
 
         Folder userTypeFolder = findByUserType(dto.getUserType());
 
-        if (userTypeFolder.getName().equals(config.disputeDocumentFolderName)) {
-            uploadFileInsideDispute(dto, userTypeFolder);
-        } else if (userTypeFolder.getName().equals(config.bidderDocumentFolderName)) {
-            uploadFileInsideBidder(dto, userTypeFolder);
+        if (userTypeFolder.getName().equals(config.disputeDocumentFolderName)
+                || userTypeFolder.getName().equals(config.amendmentDocumentFolderName)) {
+            uploadFileBasedOnUserType(dto, userTypeFolder);
         } else {
             throw new RuntimeException("Wrong userType");
         }
 
-
-    }
-
-    private void uploadFileInsideBidder(FileUploadDTO dto, Folder userTypeFolder) {
-
-
-        Folder documentTypeFolder = checkFolder(userTypeFolder, dto.getDocumentType());
-
-        if (Objects.isNull(documentTypeFolder)) throw new RuntimeException("Wrong documentType");
-
-        Folder userIdFolder = checkFolder(documentTypeFolder, String.valueOf(dto.getUserId()));
-
-        if (Objects.isNull(userIdFolder)) {
-            userIdFolder = createFolder(documentTypeFolder, String.valueOf(dto.getUserId()));
-        }
-
-        uploadDocument(userIdFolder, dto);
-
     }
 
 
-    private void uploadFileInsideDispute(FileUploadDTO dto, Folder userTypeFolder) {
+    private void uploadFileBasedOnUserType(FileUploadDTO dto, Folder userTypeFolder) {
 
 
-        Folder disputeIdFolder = checkFolder(userTypeFolder, String.valueOf(dto.getDisputeId()));
+        Folder disputeIdFolder = checkFolder(userTypeFolder, String.valueOf(dto.getCommonId()));
 
 
         if (Objects.isNull(disputeIdFolder)) {
-            disputeIdFolder = createFolder(userTypeFolder, String.valueOf(dto.getDisputeId()));
+            disputeIdFolder = createFolder(userTypeFolder, String.valueOf(dto.getCommonId()));
         }
 
         Folder userIdFolder = checkFolder(disputeIdFolder, String.valueOf(dto.getUserId()));
