@@ -35,7 +35,6 @@ public class FileUploadEntity {
     @Column(nullable = false)
     private Long uploadedBy;
 
-    @Column(nullable = false)
     private Long disputeId;
 
 

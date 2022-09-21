@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 @Service
 public class FileUploadService {
@@ -37,10 +38,10 @@ public class FileUploadService {
                 .documentSize(String.valueOf(file.getSize()))
                 .uploadedDate(LocalDateTime.now())
                 .uploadedBy(dto.getUserId())
-                .disputeId(dto.getDisputeId())
+                .disputeId(Objects.isNull(dto.getDisputeId()) ? 0 : dto.getDisputeId())
                 .build();
 
         repository.save(fileUploadEntity);
-        return new ResponseEntity<>(new ResponseData(HttpStatus.OK.value(), "success"),HttpStatus.OK);
+        return new ResponseEntity<>(new ResponseData(HttpStatus.OK.value(), "success"), HttpStatus.OK);
     }
 }
