@@ -140,12 +140,16 @@ public class AlfrescoService {
 
     }
 
-    public Document findByDto(DeleteDocumentDTO dto,String version) {
+    public Document findByDto(DeleteDocumentDTO dto, String version) {
 
         Document documentByName = getDocument(dto);
 
+        System.out.println("documentByName.getId() = " + documentByName.getId());
+
+        documentByName.getAllVersions().forEach(System.out::println);
+
         if (version != null)
-            return (Document) config.session.getObject(config.session.createObjectId(documentByName.getId().substring(0,documentByName.getId().indexOf(";"))) + ";" + version);
+            return (Document) config.session.getObject(config.session.createObjectId(documentByName.getId().substring(0, documentByName.getId().indexOf(";"))) + ";" + version);
         return (Document) config.session.getObject(config.session.createObjectId(documentByName.getId()));
 
     }
