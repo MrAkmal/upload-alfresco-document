@@ -148,9 +148,12 @@ public class AlfrescoService {
 
         documentByName.getAllVersions().forEach(System.out::println);
 
+        CmisObject object = config.session.getObject(documentByName.getId());
+        System.out.println("object.getName() = " + object.getName());
+
         if (version != null)
-            return (Document) config.session.getObject(config.session.createObjectId(documentByName.getId().substring(0, documentByName.getId().indexOf(";"))) + ";" + version);
-        return (Document) config.session.getObject(config.session.createObjectId(documentByName.getId()));
+            return (Document) config.session.getObject(documentByName.getId().substring(0, documentByName.getId().indexOf(";")) + ";" + version);
+        return (Document) config.session.getObject(documentByName.getId());
 
     }
 
