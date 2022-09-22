@@ -50,6 +50,8 @@ public class AmendmentDocumentService {
             document.setVersions(versions);
         });
 
+        System.out.println("commonDTO = " + commonDTO);
+
         return new ResponseEntity<>(commonDTO, HttpStatus.OK);
     }
 

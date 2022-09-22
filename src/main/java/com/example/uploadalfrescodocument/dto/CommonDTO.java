@@ -29,4 +29,13 @@ public class CommonDTO {
 
     private List<String> versions;
 
+    public CommonDTO(Long id, String documentName, String documentDescription, String documentSize, LocalDateTime uploadedDate, Long uploadedBy, Long commonId) {
+        this.id = id;
+        this.documentName = documentName;
+        this.documentDescription = documentDescription;
+        this.documentSize = documentSize;
+        this.uploadedDate = uploadedDate;
+        this.uploadedBy = uploadedBy;
+        this.commonId = commonId;
+    }
 }
