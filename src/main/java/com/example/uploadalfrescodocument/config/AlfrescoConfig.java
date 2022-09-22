@@ -44,6 +44,11 @@ public class AlfrescoConfig {
     public String baseFolder;
 
 
+
+    @Value("${amendment.document.folder.name}")
+    public String amendmentDocumentFolderName;
+
+
     public Session session;
 
     @PostConstruct

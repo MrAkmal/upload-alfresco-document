@@ -29,15 +29,17 @@ public class FileUploadController {
         return service.uploadFile(dto );
     }
 
+    //download, delete 
 
-    @PostMapping(value = "/test",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ResponseData> test(@RequestBody MultipartFile file,
-                                             @RequestParam  String fileDescription,
-                                             @RequestParam Long userId,
-                                             @RequestParam Long disputeId,
-                                             @RequestParam String userType,
-                                             @RequestParam String documentType) {
-        return service.uploadFile(new FileUploadDTO(file,fileDescription,userId,disputeId,userType,documentType));
-    }
+
+//    @PostMapping(value = "/test",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+//    public ResponseEntity<ResponseData> test(@RequestBody MultipartFile file,
+//                                             @RequestParam  String fileDescription,
+//                                             @RequestParam Long userId,
+//                                             @RequestParam Long disputeId,
+//                                             @RequestParam String userType,
+//                                             @RequestParam String documentType) {
+//        return service.uploadFile(new FileUploadDTO(file,fileDescription,userId,disputeId,userType,documentType));
+//    }
 
 }

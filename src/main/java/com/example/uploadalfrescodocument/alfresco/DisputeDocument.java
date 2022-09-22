@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Builder
 @Entity
 @Table(name = "dispute_document")
-public class FileUploadEntity {
+public class DisputeDocument {
 
 
     @Id
