@@ -145,7 +145,7 @@ public class AlfrescoService {
         Document documentByName = getDocument(dto);
 
         if (version != null)
-            return (Document) config.session.getObject(config.session.createObjectId(documentByName.getId()) + ";" + version);
+            return (Document) config.session.getObject(config.session.createObjectId(documentByName.getId().substring(0,documentByName.getId().indexOf(";"))) + ";" + version);
         return (Document) config.session.getObject(config.session.createObjectId(documentByName.getId()));
 
     }
