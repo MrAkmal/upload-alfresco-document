@@ -9,6 +9,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/v1/dispute")
+@CrossOrigin("*")
 public class DisputeDocumentController {
 
 
