@@ -1,8 +1,12 @@
 package com.example.uploadalfrescodocument.alfresco;
 
-import com.example.uploadalfrescodocument.alfresco.dto.FileUploadDTO;
-import com.example.uploadalfrescodocument.alfresco.dto.ResponseData;
+import com.example.uploadalfrescodocument.dto.FileUploadDTO;
+import com.example.uploadalfrescodocument.dto.ResponseData;
+import com.example.uploadalfrescodocument.amendment.AmendmentDocument;
+import com.example.uploadalfrescodocument.amendment.AmendmentDocumentRepository;
 import com.example.uploadalfrescodocument.config.AlfrescoConfig;
+import com.example.uploadalfrescodocument.dispute.DisputeDocument;
+import com.example.uploadalfrescodocument.dispute.DisputeDocumentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,7 +14,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
-import java.util.Objects;
 
 @Service
 public class FileUploadService {
@@ -68,4 +71,5 @@ public class FileUploadService {
         }
 
     }
+
 }

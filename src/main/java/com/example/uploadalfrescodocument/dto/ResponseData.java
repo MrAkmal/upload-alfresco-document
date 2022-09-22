@@ -1,4 +1,4 @@
-package com.example.uploadalfrescodocument.alfresco.dto;
+package com.example.uploadalfrescodocument.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

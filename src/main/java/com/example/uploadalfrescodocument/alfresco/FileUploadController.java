@@ -1,13 +1,11 @@
 package com.example.uploadalfrescodocument.alfresco;
 
 
-import com.example.uploadalfrescodocument.alfresco.dto.FileUploadDTO;
-import com.example.uploadalfrescodocument.alfresco.dto.ResponseData;
+import com.example.uploadalfrescodocument.dto.FileUploadDTO;
+import com.example.uploadalfrescodocument.dto.ResponseData;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/v1/file")
@@ -29,17 +27,10 @@ public class FileUploadController {
         return service.uploadFile(dto );
     }
 
-    //download, delete 
 
 
-//    @PostMapping(value = "/test",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-//    public ResponseEntity<ResponseData> test(@RequestBody MultipartFile file,
-//                                             @RequestParam  String fileDescription,
-//                                             @RequestParam Long userId,
-//                                             @RequestParam Long disputeId,
-//                                             @RequestParam String userType,
-//                                             @RequestParam String documentType) {
-//        return service.uploadFile(new FileUploadDTO(file,fileDescription,userId,disputeId,userType,documentType));
-//    }
+
+
+
 
 }
