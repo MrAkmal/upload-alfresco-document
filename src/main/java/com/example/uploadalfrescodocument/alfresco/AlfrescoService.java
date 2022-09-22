@@ -1,10 +1,12 @@
 package com.example.uploadalfrescodocument.alfresco;
 
 
-import com.example.uploadalfrescodocument.alfresco.dto.FileUploadDTO;
 import com.example.uploadalfrescodocument.config.AlfrescoConfig;
+import com.example.uploadalfrescodocument.dto.DeleteDocumentDTO;
+import com.example.uploadalfrescodocument.dto.FileUploadDTO;
 import lombok.SneakyThrows;
 import org.apache.chemistry.opencmis.client.api.CmisObject;
+import org.apache.chemistry.opencmis.client.api.Document;
 import org.apache.chemistry.opencmis.client.api.Folder;
 import org.apache.chemistry.opencmis.commons.PropertyIds;
 import org.apache.chemistry.opencmis.commons.data.ContentStream;
@@ -120,5 +122,47 @@ public class AlfrescoService {
             if (child.getName().equals(userType)) return (Folder) child;
         }
         throw new RuntimeException("UserType folder not found");
+    }
+
+    public void deleteDocument(DeleteDocumentDTO dto) {
+
+        Document documentByName = getDocument(dto);
+        config.session.delete(documentByName);
+
+    }
+
+    private Document getDocumentByName(Folder parentFolder, String documentName) {
+
+        for (CmisObject child : parentFolder.getChildren()) {
+            if (child instanceof Document && child.getName().equals(documentName)) return (Document) child;
+        }
+        throw new RuntimeException("Document not found with name " + documentName);
+
+    }
+
+    public Document findByDto(DeleteDocumentDTO dto,String version) {
+
+        Document documentByName = getDocument(dto);
+
+        if (version != null)
+            return (Document) config.session.getObject(config.session.createObjectId(documentByName.getId()) + ";" + version);
+        return (Document) config.session.getObject(config.session.createObjectId(documentByName.getId()));
+
+    }
+
+    private Document getDocument(DeleteDocumentDTO dto) {
+        String folderName = dto.getFolderName();
+
+        Folder userType = findByUserType(folderName);
+
+        Folder commonFolder = checkFolder(userType, String.valueOf(dto.getCommonId()));
+
+        if (Objects.isNull(commonFolder)) throw new RuntimeException("Folder with " + dto.getCommonId() + " not found");
+
+        Folder userIdFolder = checkFolder(commonFolder, String.valueOf(dto.getUserId()));
+
+        if (Objects.isNull(userIdFolder)) throw new RuntimeException("Folder with " + dto.getUserId() + " not found");
+
+        return getDocumentByName(userIdFolder, dto.getDocumentName());
     }
 }
