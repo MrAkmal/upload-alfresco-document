@@ -2,6 +2,7 @@ package com.example.uploadalfrescodocument.alfresco;
 
 
 import com.example.uploadalfrescodocument.config.AlfrescoConfig;
+import com.example.uploadalfrescodocument.config.EncryptionConfig;
 import com.example.uploadalfrescodocument.dto.DeleteDocumentDTO;
 import com.example.uploadalfrescodocument.dto.FileUploadDTO;
 import lombok.SneakyThrows;
@@ -12,12 +13,15 @@ import org.apache.chemistry.opencmis.commons.PropertyIds;
 import org.apache.chemistry.opencmis.commons.data.ContentStream;
 import org.apache.chemistry.opencmis.commons.enums.VersioningState;
 import org.apache.chemistry.opencmis.commons.impl.dataobjects.ContentStreamImpl;
+import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -26,10 +30,13 @@ import java.util.Objects;
 public class AlfrescoService {
 
     private final AlfrescoConfig config;
+    private final EncryptionConfig encryptionConfig;
+
 
     @Autowired
-    public AlfrescoService(AlfrescoConfig config) {
+    public AlfrescoService(AlfrescoConfig config, EncryptionConfig encryptionConfig) {
         this.config = config;
+        this.encryptionConfig = encryptionConfig;
     }
 
     public void uploadFile(FileUploadDTO dto) {
@@ -83,10 +90,30 @@ public class AlfrescoService {
 
         long contentLength = multipartFile.getBytes().length;
 
+
         InputStream inputStream = multipartFile.getInputStream();
+        byte[] encryptedContent = encryptionConfig.encrypt(inputStream, "AES");
+
+
+
+        System.out.println("*****************************************");
+        System.out.println("encryptedInputStream = " + encryptedContent);
+        System.out.println("*****************************************");
 
         ContentStream contentStream =
-                new ContentStreamImpl(originalFilename, BigInteger.valueOf(contentLength), multipartFile.getContentType(), inputStream);
+                new ContentStreamImpl(originalFilename, BigInteger.valueOf(encryptedContent.length),
+                        multipartFile.getContentType(), new ByteArrayInputStream(encryptedContent));
+
+        String s1 = IOUtils.toString(contentStream.getStream(), StandardCharsets.UTF_8);
+
+        System.out.println("contentStream.getFileName() = " + contentStream.getFileName());
+        System.out.println("contentStream.getMimeType() = " + contentStream.getMimeType());
+        System.out.println("contentStream.getLength() = " + contentStream.getLength());
+
+        System.out.println("454464*****************************************");
+
+        System.out.println("s1 = " + s1);
+        System.out.println("454464*****************************************");
 
 
         parentFolder.createDocument(properties, contentStream, VersioningState.MAJOR);
@@ -140,6 +167,7 @@ public class AlfrescoService {
 
     }
 
+    @SneakyThrows
     public Document findByDto(DeleteDocumentDTO dto, String version) {
 
         Document documentByName = getDocument(dto);
@@ -151,9 +179,39 @@ public class AlfrescoService {
         CmisObject object = config.session.getObject(documentByName.getId());
         System.out.println("object.getName() = " + object.getName());
 
-        if (version != null)
-            return (Document) config.session.getObject(documentByName.getId().substring(0, documentByName.getId().indexOf(";")) + ";" + version);
-        return (Document) config.session.getObject(documentByName.getId());
+        Document document = null;
+        if (version != null) {
+            document = (Document) config.session.getObject(documentByName.getId().substring(0, documentByName.getId().indexOf(";")) + ";" + version);
+        } else {
+            document = (Document) config.session.getObject(documentByName.getId());
+        }
+
+        InputStream stream = document.getContentStream().getStream();
+
+        System.out.println("IOUtils.toString(stream,StandardCharsets.UTF_8) = " + IOUtils.toString(stream, StandardCharsets.UTF_8));
+
+        System.out.println("stream.readAllBytes() = " + stream.readAllBytes());
+        System.out.println("stream.readAllBytes().length = " + stream.readAllBytes().length);
+
+        byte[] aes = encryptionConfig.decrypt("AES", encryptionConfig.aesSecretKey, stream.readAllBytes());
+
+        System.out.println("IOUtils.toString(aes) = " + IOUtils.toString(aes));
+
+        InputStream inputStream1 = new ByteArrayInputStream(aes);
+
+
+        String str = IOUtils.toString(inputStream1, StandardCharsets.UTF_8);
+
+        System.out.println("str = " + str);
+
+        document.setContentStream(
+                new ContentStreamImpl(
+                        document.getName(),
+                        BigInteger.valueOf(aes.length),
+                        document.getContentStreamMimeType(), inputStream1),
+                true);
+
+        return document;
 
     }
 
