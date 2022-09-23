@@ -43,11 +43,8 @@ public class AlfrescoConfig {
     @Value("${base.folder}")
     public String baseFolder;
 
-
-
     @Value("${amendment.document.folder.name}")
     public String amendmentDocumentFolderName;
-
 
     public Session session;
 
@@ -79,13 +76,6 @@ public class AlfrescoConfig {
         }
         throw new RuntimeException("Base folder not found");
     }
-
-
-
-
-
-
-
 
 }
 

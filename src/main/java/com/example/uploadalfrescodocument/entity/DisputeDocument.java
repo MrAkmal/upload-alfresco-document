@@ -1,4 +1,4 @@
-package com.example.uploadalfrescodocument.amendment;
+package com.example.uploadalfrescodocument.entity;
 
 
 import lombok.*;
@@ -12,8 +12,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Builder
 @Entity
-@Table(name = "amendment_document")
-public class AmendmentDocument {
+@Table(name = "dispute_document")
+public class DisputeDocument {
 
 
     @Id
@@ -35,7 +35,7 @@ public class AmendmentDocument {
     @Column(nullable = false)
     private Long uploadedBy;
 
-    private Long amendmentId;
+    private Long disputeId;
 
 
 }

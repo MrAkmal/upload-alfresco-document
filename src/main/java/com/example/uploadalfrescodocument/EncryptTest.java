@@ -2,104 +2,148 @@ package com.example.uploadalfrescodocument;
 
 
 import lombok.SneakyThrows;
+import org.apache.chemistry.opencmis.client.api.CmisObject;
+import org.apache.chemistry.opencmis.client.api.Document;
+import org.apache.chemistry.opencmis.client.api.Folder;
+import org.apache.chemistry.opencmis.commons.PropertyIds;
+import org.apache.chemistry.opencmis.commons.data.ContentStream;
+import org.apache.chemistry.opencmis.commons.enums.VersioningState;
+import org.apache.chemistry.opencmis.commons.impl.dataobjects.ContentStreamImpl;
 import org.apache.commons.io.IOUtils;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.crypto.Cipher;
-import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
-import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
-import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
-import java.io.FileReader;
-import java.nio.charset.StandardCharsets;
+import java.io.InputStream;
+import java.math.BigInteger;
 import java.security.*;
-import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
 
+
+@Component
 public class EncryptTest {
-//
-//    public static final String encryptAlgorithm = "AES";
-//    public static final String secretKey = "123";
+
 
     @SneakyThrows
-    public static void test(MultipartFile file) {
+    public static void main(String[] args) {
 
 
-        byte[] text = file.getInputStream().readAllBytes();
+//        KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
+//
+//        generator.initialize(2048);
+//
+//        KeyPair keyPair = generator.genKeyPair();
+//
+//        PrivateKey aPrivate = keyPair.getPrivate();
+//        PublicKey aPublic = keyPair.getPublic();
+        byte[] secretKey = "9mng65v8jf4lxn93nabf981m".getBytes();
+        SecretKeySpec secretKeySpec = new SecretKeySpec(secretKey, "TripleDES");
 
 
-        byte[] encode = Base64.getEncoder().encode("456145afasfsa".getBytes());
+        Cipher cipher = Cipher.getInstance("TripleDES");
+        cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec);
 
-        SecretKey secretKey = new  SecretKeySpec("1234567812345678".getBytes(),"AES");
+        String text = "some";
+        byte[] bytes = cipher.doFinal(text.getBytes());
 
-
-        Cipher cipher = Cipher.getInstance("AES");
-
-
-
-
-//        byte[] text = "No body can see me.".getBytes(StandardCharsets.UTF_8);
+        System.out.println("bytes = " + bytes);
 
 
-        System.out.println("text = " + text.toString());
+        cipher.init(Cipher.DECRYPT_MODE, secretKeySpec);
 
-        cipher.init(Cipher.ENCRYPT_MODE,secretKey);
+        byte[] decryptedText = cipher.doFinal(bytes);
 
-        byte[] encryptedText = cipher.doFinal(text);
-
-        System.out.println("encryptedText.length = " + encryptedText.length);
-
-        System.out.println("encryptedText = " + encryptedText.toString());
-        String str = IOUtils.toString(encryptedText);
-
-        cipher.init(Cipher.DECRYPT_MODE,secretKey);
-        byte[] decryptedText = cipher.doFinal(encryptedText);
-
-        System.out.println("decryptedText = " + decryptedText.toString());
-
-        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(decryptedText);
-
-        String str1 = IOUtils.toString(byteArrayInputStream, StandardCharsets.UTF_8);
-
-        System.out.println("str = " + str);
-        System.out.println("str1 = " + str1);
-
-
-//        encryptSHA();
-
+        System.out.println("IOUtils.toString(decryptedText) = " + IOUtils.toString(decryptedText));
     }
 
 
 //    @SneakyThrows
-//    public void encryptRSA(){
+//    public static ResponseEntity decrypt() {
+//
+//        Folder rootFolder = session.getRootFolder();
+//
+//        Document document = null;
+//        for (CmisObject child : rootFolder.getChildren()) {
+//            if (child.getId().equals("7123c184-242f-49ae-9d87-0fa2a26e47e6;1.0")) {
+//                document = (Document) child;
+//                break;
+//            }
+//        }
+//
+//        SecretKey secretKey = new SecretKeySpec("1234567812345678".getBytes(), "AES");
 //
 //
+//        Cipher cipher = Cipher.getInstance("AES");
+//        cipher.init(Cipher.DECRYPT_MODE, secretKey);
 //
-//        Cipher encryptCipher = Cipher.getInstance("RSA");
-//        encryptCipher.init(Cipher.ENCRYPT_MODE, publicKey);
+//        ContentStream contentStream = document.getContentStream();
+//
+//        InputStream inputStream = contentStream.getStream();
+//
+//        byte[] bytes = IOUtils.toByteArray(inputStream);
+//
+//        byte[] decryptedText = cipher.doFinal(bytes);
+//
+//
+////        ContentStream contentStream1 = new ContentStreamImpl(document.getName(),
+////                BigInteger.valueOf(decryptedText.length), document.getContentStreamMimeType(),
+////                new ByteArrayInputStream(decryptedText));
+////
+////
+////        document.setContentStream(contentStream1,true);
+////
+//
+//
+//        HttpHeaders responseHeaders = new HttpHeaders();
+//        responseHeaders.add("content-disposition", "attachment; filename=" +
+//                document.getName());
+//        responseHeaders.add("Content-Type", document.getContentStreamMimeType());
+//        responseHeaders.add("file-name", document.getName());
+//
+//        return new ResponseEntity(decryptedText, responseHeaders, HttpStatus.OK);
+//    }
+//
+//
+////    @SneakyThrows
+////    public void encryptRSA(){
+////
+////
+////
+////        Cipher encryptCipher = Cipher.getInstance("RSA");
+////        encryptCipher.init(Cipher.ENCRYPT_MODE, publicKey);
+////
+////    }
+//
+//
+//    @SneakyThrows
+//    public static void encryptSHA() {
+//
+//
+//        MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
+//
+//        String content = "Salom";
+//
+//        byte[] encryptedContent = messageDigest.digest(content.getBytes());
+//
+//        System.out.println("content.getBytes() = " + content.getBytes());
+//
+//        System.out.println("encryptedContent = " + encryptedContent);
+//
 //
 //    }
-
-
-    @SneakyThrows
-    public static void encryptSHA(){
-
-
-        MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
-
-        String content = "Salom";
-
-        byte[] encryptedContent = messageDigest.digest(content.getBytes());
-
-        System.out.println("content.getBytes() = " + content.getBytes());
-
-        System.out.println("encryptedContent = " + encryptedContent);
-
-
-    }
-
-
+//
+//
+//    public void some2() {
+//
+//
+//    }
 
 
 }

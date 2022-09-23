@@ -33,4 +33,7 @@ public class FileUploadDTO {
     private String userType;
 
 
+    private String algorithm;
+
+
 }

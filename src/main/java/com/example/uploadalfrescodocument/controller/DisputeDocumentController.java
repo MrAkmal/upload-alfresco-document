@@ -1,6 +1,7 @@
-package com.example.uploadalfrescodocument.amendment;
+package com.example.uploadalfrescodocument.controller;
 
 import com.example.uploadalfrescodocument.dto.CommonDTO;
+import com.example.uploadalfrescodocument.service.DisputeDocumentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -8,18 +9,18 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/v1/amendment")
+@RequestMapping("/v1/dispute")
 @CrossOrigin("*")
-public class AmendmentDocumentController {
+public class DisputeDocumentController {
 
 
-
-    private final AmendmentDocumentService service;
+    private final DisputeDocumentService service;
 
     @Autowired
-    public AmendmentDocumentController(AmendmentDocumentService service) {
+    public DisputeDocumentController(DisputeDocumentService service) {
         this.service = service;
     }
+
 
 
     @GetMapping
@@ -33,10 +34,18 @@ public class AmendmentDocumentController {
         return service.delete(id);
     }
 
+
     @GetMapping("/{id}/{version}")
     public @ResponseBody ResponseEntity download(@PathVariable Long id,@PathVariable String version) {
         return service.download(id,version);
     }
+
+
+
+//    @GetMapping("/decrypt")
+//    public @ResponseBody ResponseEntity decrypt() {
+//        return EncryptTest.decrypt();
+//    }
 
 
 

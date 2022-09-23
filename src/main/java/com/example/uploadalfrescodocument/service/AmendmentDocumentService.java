@@ -1,22 +1,20 @@
-package com.example.uploadalfrescodocument.amendment;
+package com.example.uploadalfrescodocument.service;
 
 import com.example.uploadalfrescodocument.alfresco.AlfrescoService;
 import com.example.uploadalfrescodocument.config.AlfrescoConfig;
-import com.example.uploadalfrescodocument.dispute.DisputeDocument;
 import com.example.uploadalfrescodocument.dto.CommonDTO;
 import com.example.uploadalfrescodocument.dto.DeleteDocumentDTO;
+import com.example.uploadalfrescodocument.entity.AmendmentDocument;
+import com.example.uploadalfrescodocument.repository.AmendmentDocumentRepository;
 import lombok.SneakyThrows;
 import org.apache.chemistry.opencmis.client.api.Document;
 import org.apache.chemistry.opencmis.client.api.DocumentProperties;
-import org.apache.chemistry.opencmis.commons.data.ContentStream;
-import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.io.InputStream;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -30,12 +28,15 @@ public class AmendmentDocumentService {
     private final AlfrescoService alfrescoService;
     private final AlfrescoConfig alfrescoConfig;
 
+    private final EncryptionService encryptionService;
+
 
     @Autowired
-    public AmendmentDocumentService(AmendmentDocumentRepository repository, AlfrescoService alfrescoService, AlfrescoConfig alfrescoConfig) {
+    public AmendmentDocumentService(AmendmentDocumentRepository repository, AlfrescoService alfrescoService, AlfrescoConfig alfrescoConfig, EncryptionService encryptionService) {
         this.repository = repository;
         this.alfrescoService = alfrescoService;
         this.alfrescoConfig = alfrescoConfig;
+        this.encryptionService = encryptionService;
     }
 
     public ResponseEntity<List<CommonDTO>> getAll() {
@@ -81,11 +82,10 @@ public class AmendmentDocumentService {
 
         Document document = alfrescoService.findByDto(new DeleteDocumentDTO(amendmentDocument.getAmendmentId(), amendmentDocument.getUploadedBy(), amendmentDocument.getDocumentName(), alfrescoConfig.amendmentDocumentFolderName), version);
 
-        ContentStream contentStream = document.getContentStream();
 
-        InputStream inputStream = contentStream.getStream();
+        String encryptionAlgorithm = encryptionService.getAlgorithmByDocumentId(document.getId());
 
-        byte[] bytes = IOUtils.toByteArray(inputStream);
+        byte[] decryptedContent = encryptionService.getDecryptedContentBytes(document, encryptionAlgorithm);
 
 
         HttpHeaders responseHeaders = new HttpHeaders();
@@ -94,6 +94,6 @@ public class AmendmentDocumentService {
         responseHeaders.add("Content-Type", document.getContentStreamMimeType());
         responseHeaders.add("file-name",document.getName());
 
-        return new ResponseEntity(bytes,responseHeaders,HttpStatus.OK);
+        return new ResponseEntity(decryptedContent,responseHeaders,HttpStatus.OK);
     }
 }

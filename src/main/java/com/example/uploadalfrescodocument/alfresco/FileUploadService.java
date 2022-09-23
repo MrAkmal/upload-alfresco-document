@@ -1,12 +1,14 @@
 package com.example.uploadalfrescodocument.alfresco;
 
+import com.example.uploadalfrescodocument.entity.AmendmentDocument;
+import com.example.uploadalfrescodocument.repository.AmendmentDocumentRepository;
+import com.example.uploadalfrescodocument.config.AlfrescoConfig;
+import com.example.uploadalfrescodocument.entity.EncryptedDocument;
+import com.example.uploadalfrescodocument.repository.EncryptedDocumentRepository;
+import com.example.uploadalfrescodocument.entity.DisputeDocument;
+import com.example.uploadalfrescodocument.repository.DisputeDocumentRepository;
 import com.example.uploadalfrescodocument.dto.FileUploadDTO;
 import com.example.uploadalfrescodocument.dto.ResponseData;
-import com.example.uploadalfrescodocument.amendment.AmendmentDocument;
-import com.example.uploadalfrescodocument.amendment.AmendmentDocumentRepository;
-import com.example.uploadalfrescodocument.config.AlfrescoConfig;
-import com.example.uploadalfrescodocument.dispute.DisputeDocument;
-import com.example.uploadalfrescodocument.dispute.DisputeDocumentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,12 +29,16 @@ public class FileUploadService {
 
     private final AlfrescoConfig alfrescoConfig;
 
+
+    private final EncryptedDocumentRepository encryptedDocumentRepository;
+
     @Autowired
-    public FileUploadService(DisputeDocumentRepository disputeRepository, AmendmentDocumentRepository amendmentRepository, AlfrescoService alfrescoService, AlfrescoConfig alfrescoConfig) {
+    public FileUploadService(DisputeDocumentRepository disputeRepository, AmendmentDocumentRepository amendmentRepository, AlfrescoService alfrescoService, AlfrescoConfig alfrescoConfig, EncryptedDocumentRepository encryptedDocumentRepository) {
         this.disputeRepository = disputeRepository;
         this.amendmentRepository = amendmentRepository;
         this.alfrescoService = alfrescoService;
         this.alfrescoConfig = alfrescoConfig;
+        this.encryptedDocumentRepository = encryptedDocumentRepository;
     }
 
 
@@ -40,7 +46,9 @@ public class FileUploadService {
 
         MultipartFile file = dto.getFile();
 
-        alfrescoService.uploadFile(dto);
+        String documentId = alfrescoService.uploadFile(dto);
+
+        encryptedDocumentRepository.save(new EncryptedDocument(documentId,dto.getAlgorithm()));
 
 
         if (dto.getUserType().equals(alfrescoConfig.disputeDocumentFolderName)) {

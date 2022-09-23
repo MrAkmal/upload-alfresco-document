@@ -1,6 +1,7 @@
-package com.example.uploadalfrescodocument.dispute;
+package com.example.uploadalfrescodocument.repository;
 
 import com.example.uploadalfrescodocument.dto.CommonDTO;
+import com.example.uploadalfrescodocument.entity.DisputeDocument;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
