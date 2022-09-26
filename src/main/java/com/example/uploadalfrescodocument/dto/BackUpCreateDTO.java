@@ -15,8 +15,6 @@ public class BackUpCreateDTO {
 
     private String documentVersion;
 
-    private MultipartFile file;
-
     private String alfrescoRootPath;
 
 

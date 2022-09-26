@@ -42,13 +42,5 @@ public class DisputeDocumentController {
 
 
 
-//    @GetMapping("/decrypt")
-//    public @ResponseBody ResponseEntity decrypt() {
-//        return EncryptTest.decrypt();
-//    }
-
-
-
-
 
 }

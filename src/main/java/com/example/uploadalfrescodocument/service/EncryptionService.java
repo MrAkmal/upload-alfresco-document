@@ -2,6 +2,7 @@ package com.example.uploadalfrescodocument.service;
 
 
 import com.example.uploadalfrescodocument.config.EncryptionConfig;
+import com.example.uploadalfrescodocument.dto.BackUpChangeDeleteTimeDTO;
 import com.example.uploadalfrescodocument.entity.EncryptedDocument;
 import com.example.uploadalfrescodocument.repository.EncryptedDocumentRepository;
 import lombok.SneakyThrows;
@@ -10,13 +11,19 @@ import org.apache.chemistry.opencmis.client.api.ObjectId;
 import org.apache.chemistry.opencmis.commons.data.ContentStream;
 import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.InputStream;
 import java.security.KeyPair;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -29,12 +36,15 @@ public class EncryptionService {
 
     private final KeyPair keyPair;
 
+    private final RestTemplate restTemplate;
+
 
     @Autowired
-    public EncryptionService(EncryptionConfig encryptionConfig, EncryptedDocumentRepository encryptedDocumentRepository, KeyPair keyPair) {
+    public EncryptionService(EncryptionConfig encryptionConfig, EncryptedDocumentRepository encryptedDocumentRepository, KeyPair keyPair, RestTemplate restTemplate) {
         this.encryptionConfig = encryptionConfig;
         this.encryptedDocumentRepository = encryptedDocumentRepository;
         this.keyPair = keyPair;
+        this.restTemplate = restTemplate;
     }
 
 
@@ -86,7 +96,6 @@ public class EncryptionService {
             decryptedContent = IOUtils.toByteArray(inputStream);
         }
 
-
         return decryptedContent;
     }
 
@@ -111,5 +120,17 @@ public class EncryptionService {
 
         encryptedDocumentRepository.deleteEncryptedDocumentsByDocumentIdIsIn(documentIds);
 
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity<BackUpChangeDeleteTimeDTO> entity = new HttpEntity<>(new BackUpChangeDeleteTimeDTO(documentIds,
+                LocalDateTime.now()),headers);
+
+        restTemplate.exchange("http://localhost:1515/v1/back_up/delete", HttpMethod.POST,entity,Void.class);
+
+    }
+
+    public void saveEncryption(String documentId, String algorithm) {
+        encryptedDocumentRepository.save(new EncryptedDocument(documentId, algorithm));
     }
 }

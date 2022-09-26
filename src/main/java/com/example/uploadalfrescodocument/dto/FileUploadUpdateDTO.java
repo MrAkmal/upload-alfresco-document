@@ -1,19 +1,20 @@
 package com.example.uploadalfrescodocument.dto;
 
-
 import lombok.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
-@Getter
-@Setter
+
 @AllArgsConstructor
 @NoArgsConstructor
+@Setter
+@Getter
 @Builder
-public class FileUploadDTO {
+public class FileUploadUpdateDTO {
 
+    private Long id;
 
     @NotNull
     private MultipartFile file;
@@ -32,12 +33,4 @@ public class FileUploadDTO {
 
 
     private String algorithm;
-
-    public FileUploadDTO(String fileDescription, Long userId, Long commonId, String userType, String algorithm) {
-        this.fileDescription = fileDescription;
-        this.userId = userId;
-        this.commonId = commonId;
-        this.userType = userType;
-        this.algorithm = algorithm;
-    }
 }
