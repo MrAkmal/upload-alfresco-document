@@ -4,6 +4,10 @@ package com.example.uploadalfrescodocument.alfresco;
 import com.example.uploadalfrescodocument.config.AlfrescoConfig;
 import com.example.uploadalfrescodocument.config.EncryptionConfig;
 import com.example.uploadalfrescodocument.dto.*;
+import com.example.uploadalfrescodocument.entity.AmendmentDocument;
+import com.example.uploadalfrescodocument.entity.DisputeDocument;
+import com.example.uploadalfrescodocument.repository.AmendmentDocumentRepository;
+import com.example.uploadalfrescodocument.repository.DisputeDocumentRepository;
 import com.example.uploadalfrescodocument.service.EncryptionService;
 import lombok.SneakyThrows;
 import org.apache.chemistry.opencmis.client.api.CmisObject;
@@ -29,10 +33,8 @@ import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.time.LocalDateTime;
+import java.util.*;
 
 @Service
 public class AlfrescoService {
@@ -45,13 +47,20 @@ public class AlfrescoService {
     private final EncryptionService encryptionService;
     private final KeyPair keyPair;
 
+    private final DisputeDocumentRepository disputeRepository;
+
+
+    private final AmendmentDocumentRepository amendmentRepository;
+
     @Autowired
-    public AlfrescoService(AlfrescoConfig config, RestTemplate restTemplate, EncryptionConfig encryptionConfig, EncryptionService encryptionService, KeyPair keyPair) {
+    public AlfrescoService(AlfrescoConfig config, RestTemplate restTemplate, EncryptionConfig encryptionConfig, EncryptionService encryptionService, KeyPair keyPair, DisputeDocumentRepository disputeRepository, AmendmentDocumentRepository amendmentRepository) {
         this.config = config;
         this.restTemplate = restTemplate;
         this.encryptionConfig = encryptionConfig;
         this.encryptionService = encryptionService;
         this.keyPair = keyPair;
+        this.disputeRepository = disputeRepository;
+        this.amendmentRepository = amendmentRepository;
     }
 
     public String uploadFile(FileUploadDTO dto, FileDTO fileDTO) {
@@ -306,28 +315,29 @@ public class AlfrescoService {
     }
 
     @SneakyThrows
-    public void updateFile(List<RestoreDTO> forUpdate, String documentId) {
-        System.out.println("------------Update---------");
-        System.out.println("documentId = " + documentId);
-        System.out.println("forUpdate = " + forUpdate);
-        System.out.println("------------End------------");
+    public void updateFile(List<RestoreDTO> forUpdate, String documentId,boolean isRestore) {
 
-        if (documentId.indexOf(";") > 0) {
-            documentId = documentId.substring(0, documentId.indexOf(";"));
-        }
 
-        Document document = findByDocument(documentId);
 
-        if (Objects.isNull(document)) {
-            throw new RuntimeException("Document not found with this " + documentId);
-        }
+
 
         for (RestoreDTO restoreDTO : forUpdate) {
-            Map<String, Object> properties = new HashMap<>();
 
-            System.out.println("------------------------");
-            System.out.println("restoreDTO.getFileDTO().getFileOriginalName() = " + restoreDTO.getFileDTO().getFileOriginalName());
-            System.out.println("------------------------");
+            if (documentId.indexOf(";") > 0) {
+                documentId = documentId.substring(0, documentId.indexOf(";"));
+            }
+            System.out.println("-------NEW DOC ID----------");
+            System.out.println("DOC ID  = " + documentId);
+            Document document = findByDocument(documentId);
+            if (isRestore) {
+                updateAmendmentOrDisputeDB(restoreDTO,document);
+            }
+
+            if (Objects.isNull(document)) {
+                throw new RuntimeException("Document not found with this " + documentId);
+            }
+
+            Map<String, Object> properties = new HashMap<>();
 
             properties.put(PropertyIds.NAME, restoreDTO.getFileDTO().getFileOriginalName());
 
@@ -352,6 +362,9 @@ public class AlfrescoService {
             Document document1 = findByDocument(documentId);
 
             Document updatedDocument = (Document) document1.updateProperties(properties);
+
+
+            documentId = updatedDocument.getId();
 
             encryptionService.saveEncryption(updatedDocument.getId(), restoreDTO.getAlgorithm());
 
@@ -378,5 +391,40 @@ public class AlfrescoService {
 
     public Document findByDocument(String documentId) {
         return (Document) config.session.getObject(config.session.createObjectId(documentId));
+    }
+
+    @SneakyThrows
+    public void updateAmendmentOrDisputeDB(RestoreDTO restoreDTO,Document byDocument){
+
+        System.out.println("byDocument = " + byDocument.getName());
+        System.out.println("byDocument = " + byDocument.getContentStream().getStream().readAllBytes().length);
+
+        if (restoreDTO.getUserType().equals(config.amendmentDocumentFolderName)) {
+            Optional<AmendmentDocument> optionalAmendmentDocument = amendmentRepository.findByAmendmentIdAndDocumentNameAndDocumentSizeAndUploadedBy(restoreDTO.getCommonId(), byDocument.getName(), String.valueOf(byDocument.getContentStream().getStream().readAllBytes().length), restoreDTO.getUserId());
+            if (optionalAmendmentDocument.isEmpty()) throw new RuntimeException("AmendmentDocument not found");
+
+            AmendmentDocument amendmentDocument = optionalAmendmentDocument.get();
+            amendmentDocument.setDocumentSize(restoreDTO.getFileDTO().getSize());
+            amendmentDocument.setDocumentName(restoreDTO.getFileDTO().getFileOriginalName());
+            amendmentDocument.setDocumentDescription(restoreDTO.getFileDescription());
+            amendmentDocument.setUploadedDate(LocalDateTime.now());
+            amendmentRepository.save(amendmentDocument);
+
+
+        } else if (restoreDTO.getUserType().equals(config.disputeDocumentFolderName)) {
+            Optional<DisputeDocument> optionalDisputeDocument = disputeRepository.findByDisputeIdAndDocumentNameAndDocumentSizeAndUploadedBy(restoreDTO.getCommonId(), byDocument.getName(), String.valueOf(byDocument.getContentStream().getStream().readAllBytes().length), restoreDTO.getUserId());
+
+            if (optionalDisputeDocument.isEmpty()) throw new RuntimeException("DisputeDocument not found");
+
+            DisputeDocument disputeDocument = optionalDisputeDocument.get();
+            disputeDocument.setDocumentSize(restoreDTO.getFileDTO().getSize());
+            disputeDocument.setDocumentName(restoreDTO.getFileDTO().getFileOriginalName());
+            disputeDocument.setDocumentDescription(restoreDTO.getFileDescription());
+            disputeDocument.setUploadedDate(LocalDateTime.now());
+            disputeRepository.save(disputeDocument);
+
+        } else {
+            throw new RuntimeException("Wrong userType");
+        }
     }
 }

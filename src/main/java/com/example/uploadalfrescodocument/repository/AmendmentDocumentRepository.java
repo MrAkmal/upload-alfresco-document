@@ -15,4 +15,7 @@ public interface AmendmentDocumentRepository extends JpaRepository<AmendmentDocu
 
 
 
+    Optional<AmendmentDocument> findByAmendmentIdAndDocumentNameAndDocumentSizeAndUploadedBy(Long amendmentId, String documentName, String documentSize, Long uploadedBy);
+
+
 }

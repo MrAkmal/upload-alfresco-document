@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface DisputeDocumentRepository extends JpaRepository<DisputeDocument,Long> {
 
@@ -13,5 +14,6 @@ public interface DisputeDocumentRepository extends JpaRepository<DisputeDocument
     List<CommonDTO> getAll();
 
 
+    Optional<DisputeDocument> findByDisputeIdAndDocumentNameAndDocumentSizeAndUploadedBy(Long disputeId, String documentName, String documentSize, Long uploadedBy);
 
 }

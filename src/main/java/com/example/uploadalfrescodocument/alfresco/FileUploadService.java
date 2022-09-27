@@ -7,6 +7,7 @@ import com.example.uploadalfrescodocument.entity.DisputeDocument;
 import com.example.uploadalfrescodocument.repository.AmendmentDocumentRepository;
 import com.example.uploadalfrescodocument.repository.DisputeDocumentRepository;
 import com.example.uploadalfrescodocument.service.EncryptionService;
+import lombok.SneakyThrows;
 import org.apache.chemistry.opencmis.client.api.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -49,13 +50,15 @@ public class FileUploadService {
 
         fileDTO.setDocumentId(documentId);
 
-        return uploadFileToDB(dto, fileDTO);
+        Long aLong = uploadFileToDB(dto, fileDTO,documentId);
+
+        return new ResponseEntity<>(new ResponseData(HttpStatus.OK.value(), "success"), HttpStatus.OK);
 
     }
 
-    private ResponseEntity<ResponseData> uploadFileToDB(FileUploadDTO dto, FileDTO file) {
+    private Long uploadFileToDB(FileUploadDTO dto, FileDTO file,String documentId) {
 
-        encryptionService.saveEncryption(file.getDocumentId(), dto.getAlgorithm());
+        encryptionService.saveEncryption(documentId, dto.getAlgorithm());
 
         if (dto.getUserType().equals(alfrescoConfig.disputeDocumentFolderName)) {
             DisputeDocument disputeDocument = DisputeDocument.builder()
@@ -67,8 +70,8 @@ public class FileUploadService {
                     .disputeId(dto.getCommonId())
                     .build();
 
-            disputeRepository.save(disputeDocument);
-            return new ResponseEntity<>(new ResponseData(HttpStatus.OK.value(), "success"), HttpStatus.OK);
+            DisputeDocument document = disputeRepository.save(disputeDocument);
+            return document.getId();
         } else if (dto.getUserType().equals(alfrescoConfig.amendmentDocumentFolderName)) {
             AmendmentDocument amendmentDocument = AmendmentDocument.builder()
                     .documentName(file.getFileOriginalName())
@@ -78,8 +81,8 @@ public class FileUploadService {
                     .uploadedBy(dto.getUserId())
                     .amendmentId(dto.getCommonId())
                     .build();
-            amendmentRepository.save(amendmentDocument);
-            return new ResponseEntity<>(new ResponseData(HttpStatus.OK.value(), "success"), HttpStatus.OK);
+            AmendmentDocument document = amendmentRepository.save(amendmentDocument);
+            return document.getId();
         } else {
             throw new RuntimeException("UserType not valid");
         }
@@ -98,6 +101,7 @@ public class FileUploadService {
             System.out.println("restoreDTO.getFileDTO().getDocumentId() = " + restoreDTO.getFileDTO().getDocumentId());
             System.out.println("restoreDTO.getFileDTO().getFileOriginalName() = " + restoreDTO.getFileDTO().getFileOriginalName());
         }
+        List<RestoreDTO> alreadyUpdatedDocs = new ArrayList<>();
 
         for (RestoreDTO restoreDTO : restoreDTOS) {
 
@@ -111,45 +115,51 @@ public class FileUploadService {
                 System.out.println("restoreDTO.getFileDescription() = " + restoreDTO.getFileDescription());
                 System.out.println("----------------------------------");
 
-
-
-                uploadFileToDB(new FileUploadDTO(
+                Long createdDBId = uploadFileToDB(new FileUploadDTO(
                                 restoreDTO.getFileDescription(),
                                 restoreDTO.getUserId(),
                                 restoreDTO.getCommonId(),
                                 restoreDTO.getUserType(),
                                 restoreDTO.getAlgorithm()
                         ),
-                        restoreDTO.getFileDTO()
+                        restoreDTO.getFileDTO(),newDocumentId
                 );
-
                 List<RestoreDTO> forUpdate = new ArrayList<>();
+
 
                 for (RestoreDTO dto : restoreDTOS) {
                     if (!restoreDTO.equals(dto) &&
                             dto.getFileDTO().getDocumentId().equals(restoreDTO.getFileDTO().getDocumentId())) {
                         forUpdate.add(dto);
+                        alreadyUpdatedDocs.add(dto);
                     }
                 }
 
+                System.out.println("forUpdate.size() = " + forUpdate.size());
+                forUpdate.forEach(System.out::println);
+
                 updateDocument(forUpdate, newDocumentId);
 
-                restoreDTOS.removeAll(forUpdate);
-
-
             } else {
-                System.out.println("---------------------------------");
-                System.out.println("restoreDTO.getFileDTO().getDocumentId() = " + restoreDTO.getFileDTO().getDocumentId());
-                System.out.println("---------------------------------");
-                updateDocument(List.of(restoreDTO), restoreDTO.getFileDTO().getDocumentId());
+
+                System.out.println("-----Already Updated Docs-----------");
+                alreadyUpdatedDocs.forEach(System.out::println);
+
+                if (!alreadyUpdatedDocs.contains(restoreDTO)) {
+                    System.out.println("---------------------------------");
+                    System.out.println("restoreDTO.getFileDTO().getDocumentId() = " + restoreDTO.getFileDTO().getDocumentId());
+                    System.out.println("---------------------------------");
+                    updateDocument(List.of(restoreDTO), restoreDTO.getFileDTO().getDocumentId());
+                }
             }
         }
 
 
     }
 
+    @SneakyThrows
     private void updateDocument(List<RestoreDTO> forUpdate, String documentId) {
-        alfrescoService.updateFile(forUpdate, documentId);
+        alfrescoService.updateFile(forUpdate, documentId,true);
     }
 
     private String uploadDocument(RestoreDTO restoreDTO) {
@@ -219,8 +229,10 @@ public class FileUploadService {
 
         System.out.println("document.getId() = " + document.getId());
 
-        updateDocument(List.of(restoreDTO), document.getId());
+        alfrescoService.updateFile(List.of(restoreDTO), document.getId(),false);
 
         return new ResponseEntity<>(new ResponseData(HttpStatus.OK.value(), "success"), HttpStatus.OK);
     }
+
+
 }
